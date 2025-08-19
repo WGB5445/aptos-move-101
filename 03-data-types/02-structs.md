@@ -18,7 +18,7 @@
 
 ### 基本语法
 
-```move
+```rust
 module my_addr::struct_basics {
     use std::debug;
     
@@ -115,7 +115,7 @@ module my_addr::struct_basics {
 
 ### 结构体的命名规范
 
-```move
+```rust
 module my_addr::naming_conventions {
     // ✅ 必须：使用 PascalCase（首字母大写）
     struct UserProfile {
@@ -141,17 +141,19 @@ module my_addr::naming_conventions {
 
 ### 基本创建方式
 
-```move
+```rust
 module my_addr::struct_creation {
     use std::debug;
     
     // 命名字段结构体
-    struct Point {
+    // 为了方便演示，为 struct 增加 copy 和 drop 的能力
+    struct Point has copy, drop{
         x: u64,
         y: u64,
     }
     
-    struct Rectangle {
+    // 为了方便演示，为 struct 增加 copy 和 drop 的能力
+    struct Rectangle has copy, drop {
         top_left: Point,
         width: u64,
         height: u64,
@@ -260,26 +262,14 @@ module my_addr::struct_creation {
         assert!(coord_x == 75, 211);
         assert!(coord_y == 125, 212);
         
-        // 元组结构体在函数参数中解构
-        let tuple_point = TuplePoint(88, 99);
-        let distance = calculate_distance_from_origin(tuple_point);
-        assert!(distance == 187, 213); // 88 + 99 的简化距离
-        
         // 在函数返回值中使用解构
-        let rgb = create_custom_color();
-        let RGB(red, green, blue) = rgb;
+        let RGB(red, green, blue) = create_custom_color();
         assert!(red == 255, 214);
         assert!(green == 128, 215);
         assert!(blue == 0, 216);
         
         debug::print(&coord_x);
         debug::print(&coord_y);
-        debug::print(&distance);
-    }
-    
-    // 在函数参数中直接解构
-    public fun calculate_distance_from_origin(TuplePoint(x, y): TuplePoint): u64 {
-        x + y  // 简化的距离计算
     }
     
     // 返回元组结构体供解构使用
@@ -298,10 +288,12 @@ module my_addr::struct_creation {
 - ✅ **模块内部**：可以直接访问和修改字段
 - ❌ **模块外部**：无法直接访问字段，需要通过公共函数
 
-```move
+```rust
 // 文件: my_module.move
 module my_addr::my_module {
-    struct Person {
+
+    // 为了方便演示，为 struct 增加 drop 的能力
+    struct Person has drop{
         name: vector<u8>,
         age: u8,
     }
@@ -316,6 +308,7 @@ module my_addr::my_module {
         person.name
     }
     
+    // ✅ 提供公共访问器函数
     public fun get_age(person: &Person): u8 {
         person.age
     }
@@ -328,7 +321,7 @@ module my_addr::my_module {
 
 // 文件: other_module.move
 module my_addr::other_module {
-    use my_addr::my_module::{Self, Person};
+    use my_addr::my_module;
     
     public fun use_person() {
         let person = my_module::create_person(b"Alice", 25);
@@ -346,11 +339,12 @@ module my_addr::other_module {
 
 ### 字段访问
 
-```move
+```rust
 module my_addr::struct_access {
     use std::debug;
     
-    struct Student {
+    // 为了方便演示，为 struct 增加 copy 和 drop 的能力
+    struct Student has copy, drop{
         id: u64,
         name: vector<u8>,
         grade: u8,
@@ -385,7 +379,7 @@ module my_addr::struct_access {
     
     #[test]
     public fun test_field_modification() {
-        let mut student = Student {
+        let student = Student {
             id: 12345,
             name: b"Bob",
             grade: 9,
@@ -433,39 +427,27 @@ module my_addr::struct_access {
         
         assert!(student_id == 54321, 408);
         assert!(student_name == b"Charlie", 409);
-        
-        // 在函数调用中使用解构
-        let summary = get_student_summary(student);
-        assert!(summary == b"Charlie:12", 410);
-        
+
         debug::print(&id);
         debug::print(&name);
-        debug::print(&summary);
     }
     
-    // 函数参数解构示例
-    public fun get_student_summary(Student { name, grade, .. }: Student): vector<u8> {
-        // 这里只关心 name 和 grade，忽略其他字段
-        let mut result = name;
-        result.append(b":");
-        // 简化的数字转字符串（实际应用中应该使用适当的转换函数）
-        if (grade == 9) result.append(b"9")
-        else if (grade == 10) result.append(b"10")
-        else if (grade == 11) result.append(b"11")
-        else if (grade == 12) result.append(b"12")
-        else result.append(b"?");
-        result
-    }
 }
 ```
 
 ### 结构体方法
 
-```move
+在为结构体编写代码时，可以使用 self 作为参数名，使得编译器可以自动识别当前函数为结构体方法。
+并可以使用 `.` 语法，使用函数 `circle.move_circle(20, 20);`
+
+否则只能写为 `move_circle(&mut circle, 20, 20);`
+
+```rust
 module my_addr::struct_methods {
     use std::debug;
     
-    struct Circle {
+    // 为了方便演示，为 struct 增加 copy 和 drop 的能力
+    struct Circle has copy, drop{
         center_x: u64,
         center_y: u64,
         radius: u64,
@@ -481,73 +463,73 @@ module my_addr::struct_methods {
     }
     
     // 获取圆的面积（简化计算，实际应该是 π * r²）
-    public fun area(circle: &Circle): u64 {
+    public fun area(self: &Circle): u64 {
         // 简化计算：3 * r * r（近似 π）
-        3 * circle.radius * circle.radius
+        3 * self.radius * self.radius
     }
     
     // 获取圆的周长（简化计算，实际应该是 2 * π * r）
-    public fun circumference(circle: &Circle): u64 {
+    public fun circumference(self: &Circle): u64 {
         // 简化计算：6 * r（近似 2π）
-        6 * circle.radius
+        6 * self.radius
     }
     
     // 移动圆心
-    public fun move_circle(circle: &mut Circle, new_x: u64, new_y: u64) {
-        circle.center_x = new_x;
-        circle.center_y = new_y;
+    public fun move_circle(self: &mut Circle, new_x: u64, new_y: u64) {
+        self.center_x = new_x;
+        self.center_y = new_y;
     }
     
     // 缩放圆
-    public fun scale_circle(circle: &mut Circle, scale_factor: u64) {
-        circle.radius = circle.radius * scale_factor;
+    public fun scale_circle(self: &mut Circle, scale_factor: u64) {
+        self.radius *= scale_factor;
     }
     
     // 检查点是否在圆内（简化计算）
-    public fun contains_point(circle: &Circle, x: u64, y: u64): bool {
-        let dx = if (x > circle.center_x) { 
-            x - circle.center_x 
+    public fun contains_point(self: &Circle, x: u64, y: u64): bool {
+        let dx = if (x > self.center_x) { 
+            x - self.center_x 
         } else { 
-            circle.center_x - x 
+            self.center_x - x 
         };
-        let dy = if (y > circle.center_y) { 
-            y - circle.center_y 
+        let dy = if (y > self.center_y) { 
+            y - self.center_y 
         } else { 
-            circle.center_y - y 
+            self.center_y - y 
         };
         
         // 简化的距离计算（实际应该用勾股定理）
-        dx + dy <= circle.radius
+        dx + dy <= self.radius
     }
     
     #[test]
     public fun test_circle_methods() {
-        let mut circle = new_circle(10, 10, 5);
+        let circle = new_circle(10, 10, 5);
         
         // 测试面积计算
-        let area_val = area(&circle);
+        let area_val = circle.area();
         debug::print(&area_val); // 75 (3 * 5 * 5)
         assert!(area_val == 75, 500);
         
         // 测试周长计算
-        let circumference_val = circumference(&circle);
+        let circumference_val = circle.circumference();
         debug::print(&circumference_val); // 30 (6 * 5)
         assert!(circumference_val == 30, 501);
         
         // 测试移动
-        move_circle(&mut circle, 20, 20);
+        circle.move_circle(20, 20);
         assert!(circle.center_x == 20, 502);
         assert!(circle.center_y == 20, 503);
         
         // 测试缩放
-        scale_circle(&mut circle, 2);
+        circle.scale_circle(2);
         assert!(circle.radius == 10, 504);
         
         // 测试点包含
-        let contains = contains_point(&circle, 25, 25);
+        let contains = circle.contains_point(25, 25);
         assert!(contains == true, 505);
         
-        let not_contains = contains_point(&circle, 35, 35);
+        let not_contains = circle.contains_point(35, 35);
         assert!(not_contains == false, 506);
     }
 }
@@ -557,8 +539,9 @@ module my_addr::struct_methods {
 
 ### 复制语义
 
-```move
+```rust
 module my_addr::struct_copy {
+    #[test_only]
     use std::debug;
     
     // 具有 copy 能力的结构体
@@ -630,31 +613,36 @@ module my_addr::struct_copy {
 
 ### 复杂的嵌套结构
 
-```move
+```rust
 module my_addr::nested_structs {
+    #[test_only]
     use std::debug;
     use std::vector;
     
-    struct Address {
+    // 为了方便演示，为 struct 增加 drop 的能力
+    struct Address has drop {
         street: vector<u8>,
         city: vector<u8>,
         country: vector<u8>,
         postal_code: vector<u8>,
     }
     
-    struct Contact {
+    // 为了方便演示，为 struct 增加 drop 的能力
+    struct Contact has drop {
         email: vector<u8>,
         phone: vector<u8>,
     }
     
-    struct Person {
+    // 为了方便演示，为 struct 增加 drop 的能力
+    struct Person has drop {
         name: vector<u8>,
         age: u8,
         address: Address,
         contact: Contact,
     }
     
-    struct Company {
+    // 为了方便演示，为 struct 增加 drop 的能力
+    struct Company has drop {
         name: vector<u8>,
         employees: vector<Person>,
         headquarters: Address,
@@ -695,16 +683,16 @@ module my_addr::nested_structs {
     }
     
     // 操作方法
-    public fun add_employee(company: &mut Company, person: Person) {
-        company.employees.push_back(person);
+    public fun add_employee(self: &mut Company, person: Person) {
+        self.employees.push_back(person);
     }
     
-    public fun get_employee_count(company: &Company): u64 {
-        company.employees.length()
+    public fun get_employee_count(self: &Company): u64 {
+        self.employees.length()
     }
     
-    public fun get_company_city(company: &Company): vector<u8> {
-        company.headquarters.city
+    public fun get_company_city(self: &Company): vector<u8> {
+        self.headquarters.city
     }
     
     #[test]
@@ -739,23 +727,23 @@ module my_addr::nested_structs {
         );
         
         // 创建公司
-        let mut tech_company = new_company(
+        let tech_company = new_company(
             b"Tech Innovations Inc.",
             office_address
         );
         
         // 添加员工
-        add_employee(&mut tech_company, alice);
+        tech_company.add_employee(alice);
         
         // 验证
-        assert!(get_employee_count(&tech_company) == 1, 900);
-        assert!(get_company_city(&tech_company) == b"San Francisco", 901);
+        assert!(tech_company.get_employee_count() == 1, 900);
+        assert!(tech_company.get_company_city() == b"San Francisco", 901);
         assert!(tech_company.employees[0].name == b"Alice Johnson", 902);
         assert!(tech_company.employees[0].age == 30, 903);
         assert!(tech_company.employees[0].address.city == b"New York", 904);
         
         debug::print(&tech_company.name);
-        debug::print(&get_employee_count(&tech_company));
+        debug::print(&tech_company.get_employee_count());
     }
 }
 ```
@@ -764,12 +752,13 @@ module my_addr::nested_structs {
 
 ### 四种基本能力
 
-```move
+```rust
 module my_addr::struct_abilities {
+    #[test_only]
     use std::debug;
     
     // 1. copy: 可以被复制
-    struct Copyable has copy, drop {
+    struct Copyable has copy {
         value: u64,
     }
     
@@ -778,12 +767,12 @@ module my_addr::struct_abilities {
         data: vector<u8>,
     }
     
-    // 3. store: 可以被存储在全局存储中
+    // 3. store: 可以被存储在其他结构体中
     struct Storable has store {
         content: vector<u8>,
     }
     
-    // 4. key: 可以作为全局存储的键
+    // 4. key: 可以作为全局存储的结构体
     struct Resource has key {
         id: u64,
         data: vector<u8>,
@@ -814,6 +803,15 @@ module my_addr::struct_abilities {
         debug::print(&original);
         debug::print(&copy1);
         debug::print(&copy2);
+
+        // 由于 Copyable 结构体未实现了 drop 能力，所以不能进行丢弃
+        // 需要手动解构结构体
+        // 可以将结构体中的值赋值给变量
+        let Copyable { value: _value } = original;
+        // 也可以使用 _ 忽略某个值
+        let Copyable { value: _ } = copy1;
+        // 也可以使用 .. 忽略所有值
+        let Copyable { .. } = copy2;
     }
     
     #[test]
@@ -850,50 +848,67 @@ module my_addr::struct_abilities {
 
 ### 参数化结构体
 
-```move
+```rust
 module my_addr::generic_structs {
+    #[test_only]
     use std::debug;
     use std::vector;
-    use std::option::{Self, Option};
     
-    // 命名字段泛型结构体
+    // ========================================
+    // 泛型结构体定义
+    // ========================================
+    
+    // 1. 命名字段泛型结构体 - Box<T>
+    // 这是一个通用的容器结构体，可以存储任意类型的值
+    // 添加了 copy, drop, store 能力以便于演示和测试
     struct Box<T> has copy, drop, store {
-        value: T,
+        value: T,  // 存储任意类型的值
     }
     
+    // 2. 双类型泛型结构体 - Pair<T, U>
+    // 可以存储两个不同类型的值，类似于元组但使用命名字段
     struct Pair<T, U> has copy, drop, store {
-        first: T,
-        second: U,
+        first: T,   // 第一个值
+        second: U,  // 第二个值
     }
     
+    // 3. 容器泛型结构体 - Container<T>
+    // 一个可以存储多个同类型元素的容器
     struct Container<T> has drop, store {
-        items: vector<T>,
+        items: vector<T>,  // 使用 vector 存储多个元素
     }
     
-    // 🆕 元组结构体泛型
-    struct TuplePair<T, U>(T, U) has copy, drop, store;
-    struct Triple<T, U, V>(T, U, V) has copy, drop, store;
-    struct Wrapper<T>(T) has copy, drop, store;
+    // 4. 元组结构体泛型 - 使用位置索引访问字段
+    struct TuplePair<T, U>(T, U) has copy, drop, store;  // 二元组
+    struct Triple<T, U, V>(T, U, V) has copy, drop, store;  // 三元组
+    struct Wrapper<T>(T) has copy, drop, store;  // 单值包装器
     
-    // 约束泛型参数
+    // 5. 带约束的泛型结构体 - Comparable<T>
+    // 泛型参数 T 必须具有 copy 和 drop 能力
     struct Comparable<T: copy + drop> has copy, drop, store {
         value: T,
     }
     
+    // ========================================
     // 构造函数
+    // ========================================
+    
+    // 创建 Box 实例
     public fun new_box<T>(value: T): Box<T> {
         Box { value }
     }
     
+    // 创建 Pair 实例
     public fun new_pair<T, U>(first: T, second: U): Pair<T, U> {
         Pair { first, second }
     }
     
+    // 创建空的 Container 实例
     public fun new_container<T>(): Container<T> {
         Container { items: vector::empty<T>() }
     }
     
-    // 🆕 元组结构体构造函数
+    // 创建元组结构体实例
     public fun new_tuple_pair<T, U>(first: T, second: U): TuplePair<T, U> {
         TuplePair(first, second)
     }
@@ -906,193 +921,224 @@ module my_addr::generic_structs {
         Wrapper(value)
     }
     
-    // 操作方法
-    public fun get_box_value<T>(box: &Box<T>): &T {
-        &box.value
+    // ========================================
+    // 访问和操作方法
+    // ========================================
+    
+    // Box 相关操作
+    public fun get_box_value<T>(self: &Box<T>): &T {
+        &self.value  // 返回对内部值的引用
     }
     
-    public fun set_box_value<T>(box: &mut Box<T>, value: T) {
-        box.value = value;
+    public fun set_box_value<T: drop>(self: &mut Box<T>, value: T) {
+        self.value = value;  // 设置新的值
     }
     
-    public fun get_first<T, U>(pair: &Pair<T, U>): &T {
-        &pair.first
+    // Pair 相关操作
+    public fun get_first<T, U>(self: &Pair<T, U>): &T {
+        &self.first  // 获取第一个值
     }
     
-    public fun get_second<T, U>(pair: &Pair<T, U>): &U {
-        &pair.second
+    public fun get_second<T, U>(self: &Pair<T, U>): &U {
+        &self.second  // 获取第二个值
     }
     
-    // 🆕 元组结构体访问方法
-    public fun get_tuple_first<T, U>(pair: &TuplePair<T, U>): &T {
-        &pair.0
+    // 元组结构体访问方法 - 使用位置索引
+    public fun get_tuple_first<T, U>(self: &TuplePair<T, U>): &T {
+        &self.0  // 访问第一个元素（索引 0）
     }
     
-    public fun get_tuple_second<T, U>(pair: &TuplePair<T, U>): &U {
-        &pair.1
+    public fun get_tuple_second<T, U>(self: &TuplePair<T, U>): &U {
+        &self.1  // 访问第二个元素（索引 1）
     }
     
-    public fun get_wrapper_value<T>(wrapper: &Wrapper<T>): &T {
-        &wrapper.0
+    public fun get_wrapper_value<T>(self: &Wrapper<T>): &T {
+        &self.0  // 访问包装的值
     }
     
-    public fun add_item<T>(container: &mut Container<T>, item: T) {
-        container.items.push_back(item);
+    // Container 相关操作
+    public fun add_item<T>(self: &mut Container<T>, item: T) {
+        self.items.push_back(item);  // 向容器添加元素
     }
     
-    public fun get_item_count<T>(container: &Container<T>): u64 {
-        container.items.length()
+    public fun get_item_count<T>(self: &Container<T>): u64 {
+        self.items.length()  // 获取容器中元素的数量
     }
     
-    public fun get_item<T>(container: &Container<T>, index: u64): &T {
-        &container.items[index]
+    public fun get_item<T>(self: &Container<T>, index: u64): &T {
+        &self.items[index]  // 根据索引获取元素
     }
+    
+    // ========================================
+    // 测试函数
+    // ========================================
     
     #[test]
     public fun test_generic_box() {
-        // 数字盒子
-        let mut number_box = new_box<u64>(42);
-        assert!(*get_box_value(&number_box) == 42, 1300);
+        // 测试不同类型的 Box 结构体
         
-        set_box_value(&mut number_box, 100);
-        assert!(*get_box_value(&number_box) == 100, 1301);
+        // 1. 数字盒子 - 存储 u64 类型
+        let number_box = new_box<u64>(42);
+        assert!(*number_box.get_box_value() == 42, 1300);
         
-        // 字符串盒子
+        // 修改盒子中的值
+        number_box.set_box_value(100);
+        assert!(*number_box.get_box_value() == 100, 1301);
+        
+        // 2. 字符串盒子 - 存储 vector<u8> 类型
         let string_box = new_box<vector<u8>>(b"Hello");
-        assert!(*get_box_value(&string_box) == b"Hello", 1302);
+        assert!(*string_box.get_box_value() == b"Hello", 1302);
         
-        // 布尔盒子
+        // 3. 布尔盒子 - 存储 bool 类型
         let bool_box = new_box<bool>(true);
-        assert!(*get_box_value(&bool_box) == true, 1303);
+        assert!(*bool_box.get_box_value() == true, 1303);
         
-        debug::print(get_box_value(&number_box));
-        debug::print(get_box_value(&string_box));
-        debug::print(get_box_value(&bool_box));
+        // 打印所有盒子的值进行验证
+        debug::print(number_box.get_box_value());
+        debug::print(string_box.get_box_value());
+        debug::print(bool_box.get_box_value());
     }
     
     #[test]
     public fun test_generic_pair() {
+        // 测试 Pair 结构体 - 可以存储两个不同类型的值
+        
+        // 创建包含数字和字符串的对
         let pair = new_pair<u64, vector<u8>>(123, b"ABC");
         
-        assert!(*get_first(&pair) == 123, 1400);
-        assert!(*get_second(&pair) == b"ABC", 1401);
+        // 验证第一个和第二个值
+        assert!(*pair.get_first() == 123, 1400);
+        assert!(*pair.get_second() == b"ABC", 1401);
         
+        // 创建包含两个布尔值的对
         let bool_pair = new_pair<bool, bool>(true, false);
-        assert!(*get_first(&bool_pair) == true, 1402);
-        assert!(*get_second(&bool_pair) == false, 1403);
+        assert!(*bool_pair.get_first() == true, 1402);
+        assert!(*bool_pair.get_second() == false, 1403);
         
-        debug::print(get_first(&pair));
-        debug::print(get_second(&pair));
+        // 打印值进行验证
+        debug::print(pair.get_first());
+        debug::print(pair.get_second());
     }
     
     #[test]
     public fun test_generic_container() {
-        let mut number_container = new_container<u64>();
+        // 测试 Container 结构体 - 可以存储多个同类型的元素
         
-        add_item(&mut number_container, 10);
-        add_item(&mut number_container, 20);
-        add_item(&mut number_container, 30);
+        // 1. 数字容器
+        let number_container = new_container<u64>();
         
-        assert!(get_item_count(&number_container) == 3, 1500);
-        assert!(*get_item(&number_container, 0) == 10, 1501);
-        assert!(*get_item(&number_container, 1) == 20, 1502);
-        assert!(*get_item(&number_container, 2) == 30, 1503);
+        // 向容器添加多个数字
+        number_container.add_item(10);
+        number_container.add_item(20);
+        number_container.add_item(30);
         
-        let mut string_container = new_container<vector<u8>>();
-        add_item(&mut string_container, b"First");
-        add_item(&mut string_container, b"Second");
+        // 验证容器的大小和内容
+        assert!(number_container.get_item_count() == 3, 1500);
+        assert!(*number_container.get_item(0) == 10, 1501);
+        assert!(*number_container.get_item(1) == 20, 1502);
+        assert!(*number_container.get_item(2) == 30, 1503);
         
-        assert!(get_item_count(&string_container) == 2, 1504);
-        assert!(*get_item(&string_container, 0) == b"First", 1505);
-        assert!(*get_item(&string_container, 1) == b"Second", 1506);
+        // 2. 字符串容器
+        let string_container = new_container<vector<u8>>();
+        string_container.add_item(b"First");
+        string_container.add_item(b"Second");
         
-        debug::print(&get_item_count(&number_container));
-        debug::print(&get_item_count(&string_container));
+        // 验证字符串容器
+        assert!(string_container.get_item_count() == 2, 1504);
+        assert!(*string_container.get_item(0) == b"First", 1505);
+        assert!(*string_container.get_item(1) == b"Second", 1506);
+        
+        // 打印容器大小进行验证
+        debug::print(&number_container.get_item_count());
+        debug::print(&string_container.get_item_count());
     }
     
-    // 🆕 测试元组结构体泛型
     #[test]
     public fun test_tuple_generics() {
-        // 元组对
+        // 测试元组结构体泛型 - 使用位置索引访问字段
+        
+        // 1. 元组对 - 使用位置索引访问
         let tuple_pair = new_tuple_pair<u64, vector<u8>>(456, b"XYZ");
-        assert!(*get_tuple_first(&tuple_pair) == 456, 1600);
-        assert!(*get_tuple_second(&tuple_pair) == b"XYZ", 1601);
+        assert!(*tuple_pair.get_tuple_first() == 456, 1600);
+        assert!(*tuple_pair.get_tuple_second() == b"XYZ", 1601);
         
-        // 三元组
+        // 2. 三元组 - 直接使用位置索引
         let triple = new_triple<bool, u64, vector<u8>>(true, 789, b"Triple");
-        assert!(triple.0 == true, 1602);
-        assert!(triple.1 == 789, 1603);
-        assert!(triple.2 == b"Triple", 1604);
+        assert!(triple.0 == true, 1602);      // 第一个元素
+        assert!(triple.1 == 789, 1603);       // 第二个元素
+        assert!(triple.2 == b"Triple", 1604); // 第三个元素
         
-        // 包装器
+        // 3. 包装器 - 包装单个值
         let wrapper = new_wrapper<u64>(999);
-        assert!(*get_wrapper_value(&wrapper) == 999, 1605);
+        assert!(*wrapper.get_wrapper_value() == 999, 1605);
         
-        debug::print(get_tuple_first(&tuple_pair));
+        // 打印值进行验证
+        debug::print(tuple_pair.get_tuple_first());
         debug::print(&triple.1);
-        debug::print(get_wrapper_value(&wrapper));
+        debug::print(wrapper.get_wrapper_value());
     }
     
-    // 🆕 泛型结构体解构
     #[test]
     public fun test_generic_destructuring() {
-        // 泛型元组结构体解构
+        // 测试泛型结构体的解构 - 将结构体分解为单独的变量
+        
+        // 1. 元组结构体解构
         let tuple_pair = new_tuple_pair<u64, bool>(777, true);
-        let TuplePair(number, flag) = tuple_pair;
+        let TuplePair(number, flag) = tuple_pair;  // 解构为 number 和 flag
         
         assert!(number == 777, 1606);
         assert!(flag == true, 1607);
         
+        // 2. 三元组解构
         let triple = new_triple<u8, u16, u32>(255, 65535, 4294967295);
-        let Triple(small, medium, large) = triple;
+        let Triple(small, medium, large) = triple;  // 解构为三个变量
         
         assert!(small == 255, 1608);
         assert!(medium == 65535, 1609);
         assert!(large == 4294967295, 1610);
         
+        // 3. 包装器解构
         let wrapper = new_wrapper<vector<u8>>(b"Wrapped");
-        let Wrapper(content) = wrapper;
+        let Wrapper(content) = wrapper;  // 解构为 content
         
         assert!(content == b"Wrapped", 1611);
         
-        // 泛型命名字段结构体解构
+        // 4. 命名字段结构体解构
         let box_value = new_box<u64>(888);
-        let Box { value } = box_value;
+        let Box { value } = box_value;  // 使用字段名解构
         
         assert!(value == 888, 1612);
         
+        // 5. Pair 结构体解构
         let pair_value = new_pair<bool, vector<u8>>(false, b"Test");
-        let Pair { first, second } = pair_value;
+        let Pair { first, second } = pair_value;  // 使用字段名解构
         
         assert!(first == false, 1613);
         assert!(second == b"Test", 1614);
         
+        // 打印解构后的变量进行验证
         debug::print(&number);
         debug::print(&content);
         debug::print(&value);
     }
-    
-    // 在泛型函数中使用解构
-    public fun extract_first<T, U>(TuplePair(first, _): TuplePair<T, U>): T {
-        first
-    }
-    
-    public fun extract_wrapper_content<T>(Wrapper(content): Wrapper<T>): T {
-        content
-    }
-    
+
     #[test]
     public fun test_generic_destructuring_functions() {
+        // 测试使用函数访问元组结构体的值
+        
+        // 使用函数获取元组对的第一个值
         let pair = new_tuple_pair<u64, vector<u8>>(123, b"ABC");
-        let first_value = extract_first(pair);
-        assert!(first_value == 123, 1615);
+        let first_value = pair.get_tuple_first();
+        assert!(*first_value == 123, 1615);
         
+        // 使用函数获取包装器的值
         let wrapper = new_wrapper<bool>(true);
-        let wrapped_value = extract_wrapper_content(wrapper);
-        assert!(wrapped_value == true, 1616);
+        let wrapped_value = wrapper.get_wrapper_value();
+        assert!(*wrapped_value == true, 1616);
         
-        debug::print(&first_value);
-        debug::print(&wrapped_value);
+        // 打印获取的值进行验证
+        debug::print(first_value);
+        debug::print(wrapped_value);
     }
 }
 ```
@@ -1101,358 +1147,123 @@ module my_addr::generic_structs {
 
 ### Token 元数据结构
 
-```move
+看了一大堆基础，可以来看看模拟一个 Token Metadata 是如何记录的吧
+
+```rust
 module my_addr::token_example {
+    #[test_only]
     use std::debug;
     use std::string::{Self, String};
-    use std::option::{Self, Option};
+    use std::option::Option;
     
+    // ========================================
+    // 代币相关结构体定义
+    // ========================================
+    
+    // 代币元数据结构体 - 存储代币的基本信息
+    // 具有 copy, drop, store 能力，可以在函数间传递和存储
     struct TokenMetadata has copy, drop, store {
-        name: String,
-        symbol: String,
-        decimals: u8,
-        icon_url: Option<String>,
-        project_url: Option<String>,
+        name: String,           // 代币名称，如 "Bitcoin"
+        symbol: String,         // 代币符号，如 "BTC"
+        decimals: u8,           // 小数位数，如 8 表示支持 8 位小数
+        icon_url: Option<String>,      // 代币图标 URL（可选）
+        project_url: Option<String>,   // 项目官网 URL（可选）
     }
     
+    // 代币信息结构体 - 存储代币的完整信息
+    // 具有 key 能力，可以作为全局存储的资源
     struct TokenInfo has key {
-        metadata: TokenMetadata,
-        total_supply: u64,
-        max_supply: Option<u64>,
+        metadata: TokenMetadata,    // 代币元数据
+        total_supply: u64,          // 当前总供应量
+        max_supply: Option<u64>,    // 最大供应量（可选，None 表示无上限）
     }
     
+    // 账户结构体 - 存储用户账户信息
+    // 具有 key 能力，可以作为全局存储的资源，但是不能带有 copy 能力，防止被复制
     struct Account has key {
-        balance: u64,
+        balance: u64,  // 账户余额
     }
     
+    // ========================================
     // 构造函数
+    // ========================================
+    
+    // 创建代币元数据
+    // 参数使用 vector<u8> 类型，然后转换为 String 类型
     public fun create_token_metadata(
-        name: vector<u8>,
-        symbol: vector<u8>,
-        decimals: u8,
-        icon_url: Option<vector<u8>>,
-        project_url: Option<vector<u8>>
+        name: vector<u8>,           // 代币名称的字节数组
+        symbol: vector<u8>,         // 代币符号的字节数组
+        decimals: u8,               // 小数位数
+        icon_url: Option<vector<u8>>,      // 图标 URL 的字节数组（可选）
+        project_url: Option<vector<u8>>    // 项目 URL 的字节数组（可选）
     ): TokenMetadata {
         TokenMetadata {
-            name: string::utf8(name),
-            symbol: string::utf8(symbol),
+            name: string::utf8(name),      // 将字节数组转换为 UTF-8 字符串
+            symbol: string::utf8(symbol),  // 将字节数组转换为 UTF-8 字符串
             decimals,
-            icon_url: option::map(icon_url, |url| string::utf8(url)),
-            project_url: option::map(project_url, |url| string::utf8(url)),
+            // 使用 map 函数处理可选值：如果有值则转换为字符串，否则保持 None
+            icon_url: icon_url.map(|url| string::utf8(url)),
+            project_url: project_url.map(|url| string::utf8(url)),
         }
     }
     
-    // 获取器方法
-    public fun get_name(metadata: &TokenMetadata): String {
-        metadata.name
+    // ========================================
+    // 获取器方法（Getter Methods）
+    // ========================================
+    
+    // 获取代币名称
+    public fun get_name(self: &TokenMetadata): String {
+        self.name
     }
     
-    public fun get_symbol(metadata: &TokenMetadata): String {
-        metadata.symbol
+    // 获取代币符号
+    public fun get_symbol(self: &TokenMetadata): String {
+        self.symbol
     }
     
-    public fun get_decimals(metadata: &TokenMetadata): u8 {
-        metadata.decimals
+    // 获取代币小数位数
+    public fun get_decimals(self: &TokenMetadata): u8 {
+        self.decimals
     }
     
-    public fun get_icon_url(metadata: &TokenMetadata): Option<String> {
-        metadata.icon_url
+    // 获取代币图标 URL（可能为 None）
+    public fun get_icon_url(self: &TokenMetadata): Option<String> {
+        self.icon_url
     }
     
-    public fun get_project_url(metadata: &TokenMetadata): Option<String> {
-        metadata.project_url
+    // 获取项目官网 URL（可能为 None）
+    public fun get_project_url(self: &TokenMetadata): Option<String> {
+        self.project_url
     }
+    
+    // ========================================
+    // 测试函数
+    // ========================================
     
     #[test]
     public fun test_token_metadata() {
+        // 创建一个代币元数据实例进行测试
+        
+        // 创建包含所有字段的代币元数据
         let metadata = create_token_metadata(
-            b"My Token",
-            b"MTK",
-            8,
-            option::some(b"https://example.com/icon.png"),
-            option::some(b"https://myproject.com")
+            b"My Token",                                    // 代币名称
+            b"MTK",                                        // 代币符号
+            8,                                             // 8 位小数
+            option::some(b"https://example.com/icon.png"), // 图标 URL
+            option::some(b"https://myproject.com")         // 项目 URL
         );
         
-        assert!(get_name(&metadata) == string::utf8(b"My Token"), 2000);
-        assert!(get_symbol(&metadata) == string::utf8(b"MTK"), 2001);
-        assert!(get_decimals(&metadata) == 8, 2002);
-        assert!(option::is_some(&get_icon_url(&metadata)), 2003);
-        assert!(option::is_some(&get_project_url(&metadata)), 2004);
+        // 验证所有字段的值是否正确
+        assert!(metadata.get_name() == string::utf8(b"My Token"), 2000);
+        assert!(metadata.get_symbol() == string::utf8(b"MTK"), 2001);
+        assert!(metadata.get_decimals() == 8, 2002);
+        assert!(metadata.get_icon_url().is_some(), 2003);      // 验证图标 URL 存在
+        assert!(metadata.get_project_url().is_some(), 2004);   // 验证项目 URL 存在
         
+        // 打印元数据信息进行验证
         debug::print(&metadata.name);
         debug::print(&metadata.symbol);
         debug::print(&metadata.decimals);
-    }
-}
-```
-
-## 最佳实践和常见错误
-
-### 1. 结构体设计原则
-
-```move
-module my_addr::best_practices {
-    use std::vector;
-    
-    // ✅ 好的设计：字段相关且内聚
-    struct User {
-        id: u64,
-        username: vector<u8>,
-        email: vector<u8>,
-        created_at: u64,
-    }
-    
-    // ✅ 提供访问器函数（getter）
-    public fun get_user_id(user: &User): u64 {
-        user.id
-    }
-    
-    public fun get_username(user: &User): vector<u8> {
-        user.username
-    }
-    
-    public fun get_email(user: &User): vector<u8> {
-        user.email
-    }
-    
-    // ✅ 提供修改器函数（setter）
-    public fun update_email(user: &mut User, new_email: vector<u8>) {
-        // 可以在这里添加验证逻辑
-        assert!(new_email.length() > 0, 1);
-        user.email = new_email;
-    }
-    
-    // ✅ 好的设计：明确的职责
-    struct BankAccount {
-        account_number: u64,
-        balance: u64,
-        owner: address,
-    }
-    
-    // ✅ 封装业务逻辑
-    public fun deposit(account: &mut BankAccount, amount: u64) {
-        assert!(amount > 0, 2);
-        account.balance = account.balance + amount;
-    }
-    
-    public fun withdraw(account: &mut BankAccount, amount: u64) {
-        assert!(amount > 0, 3);
-        assert!(account.balance >= amount, 4);
-        account.balance = account.balance - amount;
-    }
-    
-    public fun get_balance(account: &BankAccount): u64 {
-        account.balance
-    }
-    
-    // ❌ 不好的设计：字段不相关
-    struct MixedData {
-        user_name: vector<u8>,
-        account_balance: u64,
-        random_number: u64,
-        is_weekend: bool,
-    }
-    
-    // ✅ 好的设计：使用合适的能力
-    struct Config has copy, drop, store {
-        max_users: u64,
-        fee_rate: u64,
-    }
-    
-    // ✅ 好的设计：资源类型
-    struct Coin has key {
-        value: u64,
-    }
-    
-    // 🆕 解构的最佳实践
-    
-    // ✅ 推荐：使用解构简化代码
-    public fun process_user_data(user: User): (u64, vector<u8>) {
-        let User { id, username, .. } = user;  // 只解构需要的字段
-        (id, username)
-    }
-    
-    // ✅ 推荐：在函数参数中直接解构
-    public fun validate_bank_account(BankAccount { balance, owner, .. }: &BankAccount): bool {
-        *balance > 0 && *owner != @0x0
-    }
-    
-    // ✅ 推荐：使用解构进行模式匹配
-    public fun categorize_config(config: Config): vector<u8> {
-        let Config { max_users, fee_rate } = config;
-        if (max_users > 1000 && fee_rate < 100) {
-            b"Enterprise"
-        } else if (max_users > 100) {
-            b"Professional"
-        } else {
-            b"Basic"
-        }
-    }
-    
-    // ❌ 避免：过度解构，影响可读性
-    /*
-    public fun bad_destructuring(User { id: user_identification_number, username: user_display_name, email: user_contact_email, created_at: user_registration_timestamp }: User) {
-        // 变量名过长，影响可读性
-    }
-    */
-    
-    // ✅ 推荐：简洁的变量名
-    public fun good_destructuring(User { id, username, email, created_at }: User) {
-        // 清晰简洁
-    }
-}
-```
-
-### 2. 构造函数模式
-
-```move
-module my_addr::constructor_patterns {
-    use std::vector;
-    
-    struct Student {
-        id: u64,
-        name: vector<u8>,
-        scores: vector<u64>,
-    }
-    
-    // ✅ 基本构造函数
-    public fun new_student(id: u64, name: vector<u8>): Student {
-        Student {
-            id,
-            name,
-            scores: vector::empty<u64>(),
-        }
-    }
-    
-    // ✅ 带验证的构造函数
-    public fun new_student_validated(id: u64, name: vector<u8>): Student {
-        assert!(id > 0, 100);
-        assert!(name.length() > 0, 101);
-        
-        Student {
-            id,
-            name,
-            scores: vector::empty<u64>(),
-        }
-    }
-    
-    // ✅ 构建器模式
-    public fun new_student_builder(): StudentBuilder {
-        StudentBuilder {
-            id: 0,
-            name: vector::empty<u8>(),
-            scores: vector::empty<u64>(),
-        }
-    }
-    
-    struct StudentBuilder {
-        id: u64,
-        name: vector<u8>,
-        scores: vector<u64>,
-    }
-    
-    public fun with_id(builder: StudentBuilder, id: u64): StudentBuilder {
-        StudentBuilder { id, ..builder }
-    }
-    
-    public fun with_name(builder: StudentBuilder, name: vector<u8>): StudentBuilder {
-        StudentBuilder { name, ..builder }
-    }
-    
-    public fun build(builder: StudentBuilder): Student {
-        assert!(builder.id > 0, 200);
-        assert!(builder.name.length() > 0, 201);
-        
-        Student {
-            id: builder.id,
-            name: builder.name,
-            scores: builder.scores,
-        }
-    }
-}
-```
-
-### 3. 常见错误和解决方案
-
-```move
-module my_addr::common_mistakes {
-    struct Data has drop {
-        values: vector<u64>,
-    }
-    
-    // ❌ 错误：直接修改不可变引用
-    /*
-    public fun wrong_modify(data: &Data) {
-        data.values.push_back(10); // 编译错误！
-    }
-    */
-    
-    // ✅ 正确：使用可变引用
-    public fun correct_modify(data: &mut Data, value: u64) {
-        data.values.push_back(value);
-    }
-    
-    // ❌ 错误：返回局部变量的引用
-    /*
-    public fun wrong_return(): &Data {
-        let data = Data { values: vector::empty<u64>() };
-        &data // 编译错误！
-    }
-    */
-    
-    // ✅ 正确：返回拥有所有权的值
-    public fun correct_return(): Data {
-        Data { values: vector::empty<u64>() }
-    }
-    
-    // ✅ 正确：接受引用参数并返回计算结果
-    public fun get_sum(data: &Data): u64 {
-        let mut sum = 0;
-        let mut i = 0;
-        while (i < data.values.length()) {
-            sum = sum + data.values[i];
-            i = i + 1;
-        };
-        sum
-    }
-}
-
-// 演示跨模块访问错误
-module my_addr::field_access_errors {
-    struct Person has drop {
-        name: vector<u8>,
-        age: u8,
-    }
-    
-    public fun create_person(name: vector<u8>, age: u8): Person {
-        Person { name, age }
-    }
-    
-    // ✅ 正确：提供公共访问函数
-    public fun get_name(person: &Person): vector<u8> {
-        person.name
-    }
-    
-    public fun get_age(person: &Person): u8 {
-        person.age
-    }
-}
-
-module my_addr::user_module {
-    use my_addr::field_access_errors::{Self, Person};
-    
-    public fun use_person_correctly() {
-        let person = field_access_errors::create_person(b"Alice", 25);
-        
-        // ❌ 错误：尝试直接访问其他模块的结构体字段
-        /*
-        let name = person.name;  // 编译错误！
-        let age = person.age;    // 编译错误！
-        */
-        
-        // ✅ 正确：通过公共函数访问
-        let name = field_access_errors::get_name(&person);
-        let age = field_access_errors::get_age(&person);
     }
 }
 ```
@@ -1471,7 +1282,6 @@ module my_addr::user_module {
 8. **能力系统**：copy、drop、store、key 四种能力
 9. **泛型结构体**：参数化的结构体定义（命名字段和元组形式）
 10. **实际应用**：Token 元数据等实际场景
-11. **最佳实践**：设计原则和常见错误避免
 
 ### 结构体特性对比
 
@@ -1482,7 +1292,6 @@ module my_addr::user_module {
 | 字段访问 | `point.x`, `point.y` | `point.0`, `point.1` |
 | 解构语法 | `let Point { x, y } = point` | `let Point(x, y) = point` |
 | 部分解构 | `let Point { x, .. } = point` | 不支持部分解构 |
-| 函数参数解构 | `fn(Point { x, y }: Point)` | `fn(Point(x, y): Point)` |
 | 适用场景 | 复杂数据结构，字段含义明确 | 简单数据组合，临时数据结构 |
 | 可读性 | 高（字段名称清晰） | 中等（需要记住字段顺序） |
 
