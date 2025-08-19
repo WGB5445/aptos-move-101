@@ -10,7 +10,7 @@ Move 是一种静态类型语言，所有变量和表达式都有明确的类型
 
 Move 提供了多种无符号整数类型，用于表示不同范围的整数值：
 
-```move
+```rust
 module my_addr::integer_types {
     use std::debug;
     
@@ -118,7 +118,7 @@ module my_addr::integer_types {
 
 布尔类型用于表示逻辑值：
 
-```move
+```rust
 module my_addr::boolean_types {
     use std::debug;
     
@@ -172,7 +172,7 @@ module my_addr::boolean_types {
 
 地址类型用于表示区块链上的账户地址：
 
-```move
+```rust
 module my_addr::address_types {
     use std::debug;
     use std::signer;
@@ -214,7 +214,7 @@ module my_addr::address_types {
 
 向量是 Move 中的动态数组：
 
-```move
+```rust
 module my_addr::vector_types {
     use std::debug;
     use std::vector;
@@ -290,7 +290,7 @@ module my_addr::vector_types {
 
 在 Move 中，字符串实际上是字节向量：
 
-```move
+```rust
 module my_addr::string_types {
     use std::debug;
     use std::string;
@@ -329,7 +329,7 @@ module my_addr::string_types {
 
 Move 是强类型语言，但支持一些隐式和显式类型转换：
 
-```move
+```rust
 module my_addr::type_conversion {
     use std::debug;
     
@@ -368,7 +368,7 @@ module my_addr::type_conversion {
 
 Move 支持类型推断，编译器可以自动推断变量类型：
 
-```move
+```rust
 module my_addr::type_inference {
     use std::debug;
     
@@ -396,7 +396,7 @@ module my_addr::type_inference {
 ### 1. 整数溢出和下溢
 Move 会在运行时检查整数溢出和下溢，如果发生会自动 abort：
 
-```move
+```rust
 module my_addr::overflow_example {
     use std::debug;
     
@@ -441,7 +441,7 @@ module my_addr::overflow_example {
 ```
 
 ### 2. 类型选择指南
-```move
+```rust
 module my_addr::type_guidelines {
     // ✅ 推荐：使用 u64 作为默认整数类型
     public fun calculate_total(items: vector<u64>): u64 {

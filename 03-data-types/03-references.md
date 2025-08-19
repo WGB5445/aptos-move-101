@@ -46,7 +46,7 @@ public fun test_immutable_references() {
 
 ### 基本语法
 
-```move
+```rust
 let mut_ref = &mut value;           // 创建可变引用
 let field_mut_ref = &mut obj.field; // 字段可变引用
 ```

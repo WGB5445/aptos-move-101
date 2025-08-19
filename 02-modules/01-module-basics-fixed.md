@@ -7,7 +7,7 @@
 ### Module 的核心概念
 
 #### 1. 命名空间
-```move
+```rust
 module my_addr::math {
     // 模块内容
 }
@@ -29,7 +29,7 @@ module my_addr::math {
 
 ### 完整的模块示例
 
-```move
+```rust
 module my_addr::bank {
     use std::signer;
     use std::debug;
@@ -105,14 +105,14 @@ module my_addr::bank {
 ## Module 的组成部分
 
 ### 1. 模块声明
-```move
+```rust
 module <address>::<module_name> {
     // 模块内容
 }
 ```
 
 ### 2. 导入语句
-```move
+```rust
 use std::signer;      // 导入标准库模块
 use my_addr::math;    // 导入自定义模块
 ```
@@ -123,13 +123,13 @@ use my_addr::math;    // 导入自定义模块
 
 const `<name>: <type> = <value>;`
 
-```move
+```rust
 const ERROR_CODE: u64 = 1;
 const MAX_BALANCE: u64 = 1000000;
 ```
 
 ### 4. 结构体定义
-```move
+```rust
 struct MyStruct has key, store {
     field1: u64,
     field2: vector<u8>,
@@ -137,7 +137,7 @@ struct MyStruct has key, store {
 ```
 
 ### 5. 函数定义
-```move
+```rust
 public fun public_function() {
     // 公共函数
 }
@@ -152,14 +152,14 @@ fun private_function() {
 ### 访问修饰符
 
 #### 1. public
-```move
+```rust
 public fun public_function() {
     // 可以被其他模块调用
 }
 ```
 
 #### 2. 默认（私有）
-```move
+```rust
 fun private_function() {
     // 只能在模块内部调用
 }
@@ -169,7 +169,7 @@ fun private_function() {
 
 需要在模块声明中指定友元模块
 
-```move
+```rust
 public(friend) fun friend_function() {
     // 只能被友元模块调用
 }
@@ -187,7 +187,7 @@ public (package) fun package_function() {
 
 ### 访问控制示例
 
-```move
+```rust
 module my_addr::access_control {
     use std::debug;
     
@@ -238,7 +238,7 @@ module my_addr::other_module {
 
 每个模块应该只负责一个特定的功能领域
 
-```move
+```rust
 // ✅ 好的设计
 module my_addr::math {
     // 数学运算相关
@@ -258,7 +258,7 @@ module my_addr::everything {
 
 模块内部的功能应该紧密相关，模块之间的依赖应该尽量减少
 
-```move
+```rust
 // 高内聚的模块设计
 module my_addr::user_management {
     struct User has key, store {
@@ -285,7 +285,7 @@ module my_addr::user_management {
 
 使用 `use` 语句导入其他模块
 
-```move
+```rust
 // 基础模块
 module my_addr::math {
     public fun add(a: u64, b: u64): u64 { a + b }
@@ -312,7 +312,7 @@ module my_addr::calculator {
 
 只使用当前函数，不需要状态或存储
 
-```move
+```rust
 module my_addr::utils {
     use std::vector;
     
@@ -348,7 +348,7 @@ module my_addr::utils {
 
 提供状态和存储，通常用于管理复杂的业务逻辑
 
-```move
+```rust
 module my_addr::voting_service {
     use std::signer;
     use std::vector;
@@ -394,7 +394,7 @@ module my_addr::voting_service {
 ## 最佳实践
 
 ### 1. 命名规范
-```move
+```rust
 // ✅ 好的命名
 module my_addr::user_management { }
 module my_addr::token_contract { }
@@ -410,7 +410,7 @@ module my_addr::vote { }
 
 vscode 插件可以读取模块中的文档注释
 
-```move
+```rust
 module my_addr::math_utils {
 
     /// 计算两个数的最大公约数
@@ -431,7 +431,7 @@ module my_addr::math_utils {
 
 使用 `assert!()` 进行错误处理 或者 使用 abort 的方式
 
-```move
+```rust
 module my_addr::safe_math {
     const EOVERFLOW: u64 = 1;
     const EINVALID_INPUT: u64 = 2;

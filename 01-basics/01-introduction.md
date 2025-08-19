@@ -35,7 +35,7 @@ Aptos Move 是一种专门为区块链设计的编程语言，由 Facebook（现
 ## Move 的应用场景
 
 ### 🪙 代币合约
-```move
+```rust
 // 简单的代币合约示例
 module my_addr::basic_coin {
     struct Coin has key {

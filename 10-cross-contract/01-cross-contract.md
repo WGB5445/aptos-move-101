@@ -3,7 +3,7 @@
 ## Move 跨模块/合约调用基础
 
 ### 导入其他模块
-```move
+```rust
 module my_addr::import_example {
     use 0x1::coin;
     // ...示例代码...
@@ -11,7 +11,7 @@ module my_addr::import_example {
 ```
 
 ### 跨模块调用函数
-```move
+```rust
 module my_addr::call_example {
     use 0x1::coin;
     public fun call_coin(): u64 {

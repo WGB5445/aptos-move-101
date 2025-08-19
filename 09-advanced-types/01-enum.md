@@ -5,7 +5,7 @@
 Move 没有原生 enum，但可以用 sum type（联合体）模式实现。
 
 ### 枚举的定义与使用
-```move
+```rust
 module my_addr::enum_example {
     struct MyEnum has copy, drop, store {
         tag: u8, // 0: A, 1: B

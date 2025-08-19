@@ -27,7 +27,7 @@ aptos move init --name hello-blockchain  --template hello-blockchain
 
 在 `sources/` 目录下打开 `hello_blockchain.move` 文件：
 
-```move
+```rust
 module hello_blockchain::message {
     use std::error;
     use std::signer;
@@ -99,7 +99,7 @@ module hello_blockchain::message {
 让我们逐行分析这个简单的 Move 程序：
 
 #### 1. 模块声明
-```move
+```rust
 module hello_blockchain::message {
 ```
 - `module`：关键字，声明这是一个模块
@@ -108,7 +108,7 @@ module hello_blockchain::message {
   - `message`：模块名称
 
 #### 2. 导入标准库
-```move
+```rust
 use std::error;
 use std::signer;
 use std::string;
@@ -124,7 +124,7 @@ use std::debug;
 - `#[test_only]`：仅在测试环境中使用的模块
 
 #### 3. 资源定义
-```move
+```rust
 struct MessageHolder has key {
     message: string::String,
 }
@@ -149,14 +149,14 @@ struct MessageChange has drop, store {
 - `to_message: string::String`：变更后的消息
 
 #### 4. 常量定义
-```move
+```rust
 const ENO_MESSAGE: u64 = 0;
 ```
 - `const`：声明一个常量
 - `ENO_MESSAGE`：表示没有消息的错误代码
 
 #### 5. 函数定义
-```move
+```rust
 #[view]
 public fun get_message(addr: address): string::String acquires MessageHolder 
 
@@ -177,7 +177,7 @@ acquires MessageHolder
 - `acquires MessageHolder`：同样声明需要获取 `MessageHolder` 资源
 
 #### 6. 函数实现
-```move
+```rust
 assert!(exists<MessageHolder>(addr), error::not_found(ENO_MESSAGE));
 borrow_global<MessageHolder>(addr).message
 ```
@@ -186,7 +186,7 @@ borrow_global<MessageHolder>(addr).message
 - `error::not_found(ENO_MESSAGE)`：如果不存在，抛出错误
 - `borrow_global<MessageHolder>(addr).message`：获取并返回消息内容
 
-```move
+```rust
 if (!exists<MessageHolder>(account_addr)) {
     move_to(&account, MessageHolder {
         message,
@@ -208,7 +208,7 @@ if (!exists<MessageHolder>(account_addr)) {
 - `event::emit(MessageChange { ... })`：触发消息变更事件
 - `old_message_holder.message = message`：更新消息内容
 #### 7. 测试函数
-```move
+```rust
 #[test(account = @0x1)]
 public entry fun sender_can_set_message(account: signer) acquires MessageHolder {
     let msg: string::String = string::utf8(b"Running test for sender_can_set_message...");
@@ -246,20 +246,20 @@ aptos move test --named-addresses hello_blockchain=0x1234
 ## Move 语法要点
 
 ### 1. 注释
-```move
+```rust
 // 单行注释
 /// 文档注释
 /* 多行注释 */
 ```
 
 ### 2. 变量声明
-```move
+```rust
 let x = 10;           // 类型推断
 let y: u64 = 20;      // 显式类型声明
 ```
 
 ### 3. 条件语句
-```move
+```rust
 if (condition) {
     // 代码块
 } else {
@@ -268,19 +268,19 @@ if (condition) {
 ```
 
 ### 4. 循环
-```move
+```rust
 while (condition) {
     // 循环体
 }
 ```
 
 ### 5. 函数调用
-```move
+```rust
 module_name::function_name(arg1, arg2);
 ```
 
 ### 6. 断言
-```move
+```rust
 assert!(condition, error_code);
 ```
 
